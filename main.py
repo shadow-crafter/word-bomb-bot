@@ -1,10 +1,8 @@
-import cv2
-from cv2.typing import MatLike
-import numpy as np
-from numpy.typing import NDArray
 from pathlib import Path
+from PIL import ImageOps, ImageEnhance
 import pyautogui
 from pynput import mouse
+import pytesseract
 import random
 from src.area import AreaSelector
 from src.word_finder import WordFinder
@@ -27,8 +25,6 @@ def get_arrow_location() -> list:
 
 
 def get_letter_region() -> tuple | None:
-    Path("logs/").mkdir(parents=True, exist_ok=True)
-
     input("Press enter when you are ready to select area for letters.")
 
     selector = AreaSelector()
@@ -40,14 +36,18 @@ def get_letter_region() -> tuple | None:
     return region
 
 
-def get_letters_in_region(img: MatLike) -> str:
-    return "hy"
+def get_letters_in_region(img) -> str:
+    text = pytesseract.image_to_string(img, config=r'--psm 7').strip()
+    print(f"Letters found: {text}")
+    return text
 
 
 def type_word(word: str):
     for c in word:
         pyautogui.press(c)
         time.sleep(random.random() / 100)
+    time.sleep(0.05 + random.random() / 100)
+    pyautogui.press("enter")
 
 
 def bot_loop():
@@ -65,8 +65,10 @@ def bot_loop():
 
     while True:
         if pyautogui.pixel(arrow_location[0], arrow_location[1]) == arrow_color:
+            Path("logs/").mkdir(parents=True, exist_ok=True)
             screenshot = pyautogui.screenshot("logs/region_screenshot.png", region=letter_region)
-            img = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+            img_gray = ImageOps.grayscale(screenshot)
+            img = ImageEnhance.Contrast(img_gray).enhance(2.0)
             letters = get_letters_in_region(img)
 
             word = word_finder.get_word(letters)
