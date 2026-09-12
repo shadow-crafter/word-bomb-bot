@@ -1,3 +1,5 @@
+import random
+
 class WordFinder:
     def __init__(self, mode: str):
         self.ignore_list: list[str] = []
@@ -5,6 +7,7 @@ class WordFinder:
 
     def get_word(self, letters: str) -> str:
         selected_word = ""
+        candidates = []
         with open("word-list.txt", "r") as f:
             for line in f:
                 l = line.strip().lower()
@@ -12,13 +15,17 @@ class WordFinder:
                     if self.mode == "normal":
                         selected_word = l
                         break
-                    elif self.mode == "longest":
-                        selected_word = l if len(l) > len(selected_word) else selected_word
-                    elif self.mode == "shortest":
-                        if selected_word == "":
-                            selected_word = l
-                        elif len(l) < len(selected_word):
-                            selected_word = l
+                    elif self.mode == "longest" or self.mode == "shortest":
+                            candidates.append(l)
 
+        if self.mode == "longest" and candidates:
+            max_length = max(len(word) for word in candidates)
+            longest_words = [w for w in candidates if len(w) == max_length]
+            selected_word = random.choice(longest_words)
+        elif self.mode == "shortest" and candidates:
+            min_length = min(len(word) for word in candidates)
+            shortest_words = [w for w in candidates if len(w) == min_length]
+            selected_word = random.choice(shortest_words)
+        
         self.ignore_list.append(selected_word)
         return selected_word
