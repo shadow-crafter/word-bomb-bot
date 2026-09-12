@@ -16,13 +16,16 @@ class WordFinder:
                     elif self.mode == "longest":
                         selected_word = l if len(l) > len(selected_word) else selected_word
                     elif self.mode == "shortest":
-                        selected_word = l if len(l) < len(selected_word) else selected_word
+                        if selected_word == "":
+                            selected_word = l
+                        elif len(l) < len(selected_word):
+                            selected_word = l
 
         self.ignore_list.append(selected_word)
         return selected_word
 
 def main():
-    word_finder = WordFinder("longest")
+    word_finder = WordFinder("shortest")
     for _ in range(50):
         print(f"word: {word_finder.get_word("hyper")}")
 
