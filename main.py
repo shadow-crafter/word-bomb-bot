@@ -1,6 +1,8 @@
+import cv2
+import numpy as np
 from pathlib import Path
-from PIL import ImageOps, ImageEnhance
 import pyautogui
+import pydirectinput
 from pynput import mouse
 import pytesseract
 import random
@@ -36,18 +38,33 @@ def get_letter_region() -> tuple | None:
     return region
 
 
-def get_letters_in_region(img) -> str:
-    text = pytesseract.image_to_string(img, config=r'--psm 7').strip()
+def get_letters_in_region(screenshot) -> str:
+    img_gray = cv2.cvtColor(np.array(screenshot), cv2.COLOR_BGR2GRAY)
+    img_resized = cv2.resize(img_gray, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    _, thresh = cv2.threshold(img_resized, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+    cv2.floodFill(thresh, None, (0, 0), 255)
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 2)) # Clean up
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel, iterations=1)
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
+
+    #cv2.imshow("debug", thresh)
+    #cv2.waitKey()
+
+    config = r'--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    text: str = pytesseract.image_to_string(thresh, config=config).strip().lower().replace(" ", "")
     print(f"Letters found: {text}")
     return text
 
 
 def type_word(word: str):
+    pydirectinput.PAUSE = 0.01
     for c in word:
-        pyautogui.press(c)
-        time.sleep(random.random() / 100)
-    time.sleep(0.05 + random.random() / 100)
-    pyautogui.press("enter")
+            pydirectinput.press(c)
+            time.sleep(0.025 + random.random() * 0.05)
+    time.sleep(0.1 + random.random() * 0.2)
+    pydirectinput.press("enter")
 
 
 def bot_loop():
@@ -63,17 +80,18 @@ def bot_loop():
     arrow_color = pyautogui.pixel(arrow_location[0], arrow_location[1])
     letter_region = get_letter_region()
 
+    print("Starting bot, focus window...")
+    time.sleep(1) # Time so you can click in window
     while True:
         if pyautogui.pixel(arrow_location[0], arrow_location[1]) == arrow_color:
             Path("logs/").mkdir(parents=True, exist_ok=True)
             screenshot = pyautogui.screenshot("logs/region_screenshot.png", region=letter_region)
-            img_gray = ImageOps.grayscale(screenshot)
-            img = ImageEnhance.Contrast(img_gray).enhance(2.0)
-            letters = get_letters_in_region(img)
 
-            word = word_finder.get_word(letters)
-            print(f"Word found: {word}")
-            type_word(word)
+            letters = get_letters_in_region(screenshot)
+            if len(letters) > 0:
+                word = word_finder.get_word(letters)
+                print(f"Word found: {word}")
+                type_word(word)
             time.sleep(0.35) #delay before checking again
 
 
