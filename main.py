@@ -60,6 +60,8 @@ def get_letters_in_region(screenshot) -> str:
 
 def type_word(word: str):
     pydirectinput.PAUSE = 0.01
+    
+    time.sleep(0.1 + random.random() * 0.35)
     for c in word:
             pydirectinput.press(c)
             time.sleep(0.025 + random.random() * 0.05)
