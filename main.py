@@ -10,8 +10,7 @@ from src.area import AreaSelector
 from src.word_finder import WordFinder
 import time
 
-
-PANIC_LIST = list("eariotnslcudpmhgbfywkvxzjq")
+PANIC_LIST = list("eariotnslcudpmhgbfywkvxzjq") # Organized roughly based on frequency
 
 def get_arrow_location() -> list:
     input("When ready, press enter, then click the yellow arrow WHILE IT IS POINTING at your player.")
@@ -85,6 +84,9 @@ def bot_loop():
     arrow_location = get_arrow_location()
     arrow_color = pyautogui.pixel(arrow_location[0], arrow_location[1])
     letter_region = get_letter_region()
+    if letter_region == None:
+        return
+    
     panic_letters: list[str] = []
     panic_letters.extend(PANIC_LIST)
 
@@ -109,7 +111,7 @@ def bot_loop():
                 word = word_finder.get_word(letters, panic=True)
                 print(f"Panicking!!! Word found: {word}")
                 type_word(word, panic=True)
-            time.sleep(0.35) #delay before checking again
+            time.sleep(0.35) # Delay before checking again
 
 
 def main():
