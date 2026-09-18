@@ -11,6 +11,8 @@ from src.word_finder import WordFinder
 import time
 
 
+PANIC_LIST = list("eariotnslcudpmhgbfywkvxzjq")
+
 def get_arrow_location() -> list:
     input("When ready, press enter, then click the yellow arrow WHILE IT IS POINTING at your player.")
 
@@ -81,6 +83,8 @@ def bot_loop():
     arrow_location = get_arrow_location()
     arrow_color = pyautogui.pixel(arrow_location[0], arrow_location[1])
     letter_region = get_letter_region()
+    panic_letters: list[str] = []
+    panic_letters.extend(PANIC_LIST)
 
     print("Starting bot, focus window...")
     time.sleep(1) # Time so you can click in window
@@ -90,9 +94,18 @@ def bot_loop():
             screenshot = pyautogui.screenshot("logs/region_screenshot.png", region=letter_region)
 
             letters = get_letters_in_region(screenshot)
-            if len(letters) > 0:
+            if len(letters) > 1:
+                panic_letters.extend(PANIC_LIST) # reset
                 word = word_finder.get_word(letters)
                 print(f"Word found: {word}")
+                type_word(word)
+            else: # PANIC MODE!! Shouldn't detect <= one letter
+                if len(panic_letters) == 0: #unlikely, but just in case
+                    panic_letters.extend(PANIC_LIST)
+                letters += panic_letters[0]
+                panic_letters.pop(0)
+                word = word_finder.get_word(letters, panic=True)
+                print(f"Panicking!!! Word found: {word}")
                 type_word(word)
             time.sleep(0.35) #delay before checking again
 
