@@ -60,14 +60,16 @@ def get_letters_in_region(screenshot) -> str:
     return text
 
 
-def type_word(word: str):
+def type_word(word: str, panic: bool = False):
     pydirectinput.PAUSE = 0.01
+    base_wait = 0.01 if panic else 0.1
+    base_type = 0.005 if panic else 0.025
     
-    time.sleep(0.1 + random.random() * 0.35)
+    time.sleep(base_wait + random.random() * 0.35)
     for c in word:
             pydirectinput.press(c)
-            time.sleep(0.025 + random.random() * 0.05)
-    time.sleep(0.1 + random.random() * 0.2)
+            time.sleep(base_type + random.random() * 0.05)
+    time.sleep(base_wait + random.random() * 0.2)
     pydirectinput.press("enter")
 
 
@@ -106,7 +108,7 @@ def bot_loop():
                 panic_letters.pop(0)
                 word = word_finder.get_word(letters, panic=True)
                 print(f"Panicking!!! Word found: {word}")
-                type_word(word)
+                type_word(word, panic=True)
             time.sleep(0.35) #delay before checking again
 
 
