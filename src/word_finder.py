@@ -14,6 +14,9 @@ class WordFinder:
                 if letters in l and not l in self.ignore_list:
                     candidates.append(l)
 
+        if len(candidates) == 0:
+            return self.get_word(letters[:2])
+
         if (self.mode == "shortest" or panic) and candidates:
             min_length = min(len(word) for word in candidates)
             shortest_words = [w for w in candidates if len(w) == min_length]
